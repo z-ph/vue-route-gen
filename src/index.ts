@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const EXCLUDED_DIRS = new Set(['components', 'hooks', 'service']);
+const EXCLUDED_DIRS = new Set(['components', 'hooks', 'services','types','constants','utils']);
 const CACHE_FILE = path.resolve(process.cwd(), 'node_modules/.cache/route-gen.json');
 
 export interface GenerateRoutesOptions {

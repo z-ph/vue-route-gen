@@ -73,7 +73,10 @@ src/pages/
 The following directories are automatically excluded:
 - `components`
 - `hooks`
-- `service`
+- `services`
+- `types`
+- `contants`
+- `utils`
 
 ## Generated Output
 

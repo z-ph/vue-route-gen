@@ -73,7 +73,10 @@ src/pages/
 以下目录会被自动排除：
 - `components`
 - `hooks`
-- `service`
+- `services`
+- `types`
+- `contants`
+- `utils`
 
 ## 生成内容
 
