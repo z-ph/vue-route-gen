@@ -20,8 +20,16 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "type-check": "tsc -b",
     "prepublishOnly": "pnpm run build",
-    "publish": "npm publish --access public --registry https://registry.npmjs.org/"
+    "pre-release": "pnpm run build && npm publish --access public --registry https://registry.npmjs.org/",
+    "release": "pnpm run build && npm publish --access public --registry https://registry.npmjs.org/",
+    "release:patch": "npm version patch && pnpm run release",
+    "release:minor": "npm version minor && pnpm run release",
+    "release:major": "npm version major && pnpm run release",
+    "release:pre": "npm version prepatch && pnpm run pre-release",
+    "release:preminor": "npm version preminor && pnpm run pre-release",
+    "release:premajor": "npm version premajor && pnpm run pre-release"
   },
   "keywords": [
     "vue",
@@ -42,6 +50,9 @@
   "homepage": "https://github.com/z-ph/signLab-front/tree/main/packages/vue-route-gen#readme",
   "bugs": {
     "url": "https://github.com/z-ph/signLab-front/issues"
+  },
+  "peerDependencies": {
+    "vue-router": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
