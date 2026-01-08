@@ -1,0 +1,53 @@
+{
+  "name": "@zphhpzzph/vue-route-gen",
+  "version": "1.0.0",
+  "description": "Vue 3 route generator for file-based routing",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "vue-route-gen": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "pnpm run build",
+    "publish": "npm publish --access public --registry https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "vue",
+    "vue-router",
+    "route-generator",
+    "file-based-routing"
+  ],
+  "author": "z-ph",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/z-ph/signLab-front.git",
+    "directory": "packages/vue-route-gen"
+  },
+  "homepage": "https://github.com/z-ph/signLab-front/tree/main/packages/vue-route-gen#readme",
+  "bugs": {
+    "url": "https://github.com/z-ph/signLab-front/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
