@@ -7,6 +7,7 @@
 
 import type { ComputedRef } from 'vue';
 export type { RouteMeta } from './types';
+export { RouteLink, default as RouteLinkComponent } from './RouteLink';
 
 /**
  * Runtime route metadata types
