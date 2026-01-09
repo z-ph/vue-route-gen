@@ -100,7 +100,7 @@ For a route like `/users/[id].vue`, the generator automatically extracts the `id
 ```typescript
 // Generated in route.gen.ts
 export interface RouteParams {
-  'users-id': {
+  'users-[id]': {
     id: string;
   };
   // ... other routes
@@ -114,7 +114,7 @@ The generated `useRoute` hook provides full type inference for route parameters:
 ```typescript
 import { useRoute, ROUTE_NAME } from '@/router/route.gen';
 
-const route = useRoute<'users-id'>();
+const route = useRoute<'users-[id]'>();
 // route.params.id is typed as `string`
 
 if (route.name === ROUTE_NAME.USERS_ID) {
