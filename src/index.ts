@@ -1,5 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { extractRouteMeta, type RouteMeta } from './extract-meta.js';
+
+export type { RouteMeta } from './extract-meta.js';
 
 const EXCLUDED_DIRS = new Set(['components', 'hooks', 'services','types','constants','utils']);
 const CACHE_FILE = path.resolve(process.cwd(), 'node_modules/.cache/route-gen.json');
@@ -15,6 +18,7 @@ export interface RouteEntry {
   importPath: string;
   children: RouteEntry[];
   params?: string[];
+  meta?: RouteMeta;
 }
 
 export interface RouteData {
@@ -167,6 +171,11 @@ function renderRoute(route: RouteEntry, indent = '  '): string {
     `${nextIndent}component: () => import(${JSON.stringify(route.importPath)}),`
   );
 
+  // Add meta if present
+  if (route.meta && Object.keys(route.meta).length > 0) {
+    lines.push(`${nextIndent}meta: ${JSON.stringify(route.meta)},`);
+  }
+
   if (route.children.length === 0) {
     lines.push(`${nextIndent}children: [],`);
   } else {
@@ -281,12 +290,17 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
 
     routeEntries.push({ name, path: routePath, params });
 
+    // Extract meta from page component
+    const fullPath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
+    const meta = extractRouteMeta(fullPath);
+
     return {
       path: routePath,
       name,
       importPath: page.importPath,
       children: [],
       params,
+      meta,
     };
   });
 
@@ -317,12 +331,17 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
 
         routeEntries.push({ name, path: fullPath, params });
 
+        // Extract meta from page component
+        const pageFilePath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
+        const meta = extractRouteMeta(pageFilePath);
+
         return {
           path: childPath,
           name,
           importPath: page.importPath,
           children: [],
           params,
+          meta,
         };
       });
 
@@ -454,12 +473,12 @@ function renderRoutesFile({
   lines.push('export interface RouteParams {');
   for (const [name, params] of routeParamsByName) {
     if (params.length > 0) {
-      const paramsStr = params.map(p => `  ${p}: string`).join(';\n');
-      lines.push(`  ${name}: {`);
+      const paramsStr = params.map(p => `    ${p}: string;`).join('\n');
+      lines.push(`  '${name}': {`);
       lines.push(paramsStr);
-      lines.push(`  }`);
+      lines.push(`  };`);
     } else {
-      lines.push(`  ${name}: Record<string, never>;`);
+      lines.push(`  '${name}': Record<string, never>;`);
     }
   }
   lines.push('}');
