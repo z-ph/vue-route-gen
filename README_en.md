@@ -1,4 +1,4 @@
-# @signlab/vue-route-gen
+# @zphhpzzph/vue-route-gen
 
 > English | [简体中文](./README.md)
 
@@ -17,11 +17,11 @@ Vue 3 file-based route generator for Vue Router with complete type inference sup
 ## Installation
 
 ```bash
-npm install @signlab/vue-route-gen
+npm install @zphhpzzph/vue-route-gen
 # or
-pnpm install @signlab/vue-route-gen
+pnpm install @zphhpzzph/vue-route-gen
 # or
-yarn add @signlab/vue-route-gen
+yarn add @zphhpzzph/vue-route-gen
 ```
 
 ## Usage
@@ -35,7 +35,7 @@ vue-route-gen
 ### Programmatic
 
 ```typescript
-import { generateRoutes } from '@signlab/vue-route-gen';
+import { generateRoutes } from '@zphhpzzph/vue-route-gen';
 
 // Generate routes with default options
 generateRoutes();

@@ -48,12 +48,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/z-ph/signLab-front.git",
+    "url": "https://github.com/z-ph/zphhpzzph-front.git",
     "directory": "packages/vue-route-gen"
   },
-  "homepage": "https://github.com/z-ph/signLab-front/tree/main/packages/vue-route-gen#readme",
+  "homepage": "https://github.com/z-ph/zphhpzzph-front/tree/main/packages/vue-route-gen#readme",
   "bugs": {
-    "url": "https://github.com/z-ph/signLab-front/issues"
+    "url": "https://github.com/z-ph/zphhpzzph-front/issues"
   },
   "peerDependencies": {
     "vue-router": "^4.0.0"

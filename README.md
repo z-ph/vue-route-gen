@@ -1,4 +1,4 @@
-# @signlab/vue-route-gen
+# @zphhpzzph/vue-route-gen
 
 > [English](./README_en.md) | 简体中文
 
@@ -17,11 +17,11 @@ Vue 3 基于文件系统的路由生成器，为 Vue Router 提供完整的类�
 ## 安装
 
 ```bash
-npm install @signlab/vue-route-gen
+npm install @zphhpzzph/vue-route-gen
 # 或
-pnpm install @signlab/vue-route-gen
+pnpm install @zphhpzzph/vue-route-gen
 # 或
-yarn add @signlab/vue-route-gen
+yarn add @zphhpzzph/vue-route-gen
 ```
 
 ## 使用方法
@@ -35,7 +35,7 @@ vue-route-gen
 ### 编程方式
 
 ```typescript
-import { generateRoutes } from '@signlab/vue-route-gen';
+import { generateRoutes } from '@zphhpzzph/vue-route-gen';
 
 // 使用默认选项生成路由
 generateRoutes();
