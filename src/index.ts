@@ -487,6 +487,51 @@ function renderRoutesFile({
   lines.push('export type RouteParamsByName<T extends RouteName> = RouteParams[T];');
   lines.push('');
 
+  // Generate route meta types
+  lines.push('// Route metadata types (extracted from <route> blocks)');
+  lines.push('export interface RouteMetaMap {');
+  for (const route of routes) {
+    const routeName = route.name;
+    const meta = route.meta;
+
+    if (meta && Object.keys(meta).length > 0) {
+      // Generate type definition for this route's meta
+      const metaFields = Object.entries(meta)
+        .map(([key, value]) => {
+          const valueType = typeof value;
+          if (valueType === 'string') {
+            return `    ${key}: string;`;
+          } else if (valueType === 'boolean') {
+            return `    ${key}: boolean;`;
+          } else if (valueType === 'number') {
+            return `    ${key}: number;`;
+          } else if (Array.isArray(value)) {
+            return `    ${key}: ${typeof value[0]}[];`;
+          } else if (valueType === 'object') {
+            return `    ${key}: Record<string, any>;`;
+          }
+          return `    ${key}: any;`;
+        })
+        .join('\n');
+
+      lines.push(`  '${routeName}': {`);
+      lines.push(metaFields);
+      lines.push(`  } & RouteMeta;`);
+    } else {
+      lines.push(`  '${routeName}': RouteMeta;`);
+    }
+  }
+  lines.push('}');
+  lines.push('');
+
+  lines.push('export type RouteMetaByName<T extends RouteName> = RouteMetaMap[T];');
+  lines.push('');
+  lines.push('// Import base RouteMeta type');
+  lines.push("import type { RouteMeta as BaseRouteMeta } from '@zphhpzzph/vue-route-gen/runtime';");
+  lines.push('// Type alias for backward compatibility');
+  lines.push('export type RouteMeta = BaseRouteMeta;');
+  lines.push('');
+
   lines.push('export const routes = [');
   lines.push(routes.map((route) => renderRoute(route)).join(',\n'));
   lines.push('] satisfies RouteRecordRaw[];');
@@ -502,19 +547,21 @@ function renderRoutesFile({
   // Generate useRoute with proper types
   lines.push('/**');
   lines.push(' * Type-safe useRoute hook');
-  lines.push(' * Route params are typed based on the current route name');
+  lines.push(' * Route params and meta are typed based on the current route name');
   lines.push(' *');
   lines.push(' * @example');
   lines.push(' * ```ts');
   lines.push(' * const route = useRoute();');
   lines.push(' * // route.params.id is typed as string if route has :id param');
+  lines.push(' * // route.meta.title is typed based on the route\'s <route> block');
   lines.push(' * ```');
   lines.push(' */');
   lines.push('export function useRoute<TName extends RouteName = RouteName>(');
   lines.push('  name?: TName');
-  lines.push('): Omit<RouteLocationNormalizedLoaded, \'params\' | \'name\'> & {');
+  lines.push('): Omit<RouteLocationNormalizedLoaded, \'params\' | \'name\' | \'meta\'> & {');
   lines.push('  name: TName;');
   lines.push('  params: TName extends keyof RouteParams ? RouteParams[TName] : RouteParams[RouteName];');
+  lines.push('  meta: TName extends keyof RouteMetaMap ? RouteMetaMap[TName] : RouteMetaMap[RouteName];');
   lines.push('} {');
   lines.push('  return vueUseRoute() as any;');
   lines.push('}');
@@ -553,6 +600,34 @@ function renderRoutesFile({
   lines.push('  const router = vueUseRouter();');
   lines.push('  return router as any;');
   lines.push('}');
+  lines.push('');
+
+  // Add type-enhanced RouteLink component
+  lines.push('// Type-enhanced RouteLink component');
+  lines.push("import { RouteLink as BaseRouteLink } from '@zphhpzzph/vue-route-gen/runtime';");
+  lines.push('');
+
+  lines.push('/**');
+  lines.push(' * Type-safe RouteLink component');
+  lines.push(' *');
+  lines.push(' * For full type safety, use the component with specific route name and params:');
+  lines.push(' *');
+  lines.push(' * @example');
+  lines.push(' * ```vue');
+  lines.push(' * <RouteLink :name="ROUTE_NAME.USERS_ID" :params="{ id: \'123\' }">');
+  lines.push(' *   View User');
+  lines.push(' * </RouteLink>');
+  lines.push(' *');
+  lines.push(' * <RouteLink :name="ROUTE_NAME.INDEX">');
+  lines.push(' *   Home');
+  lines.push(' * </RouteLink>');
+  lines.push(' * ```');
+  lines.push(' *');
+  lines.push(' * Type helpers:');
+  lines.push(' * - `name`: RouteName (autocompletes route names)');
+  lines.push(' * - `params`: RouteParamsByName<typeof ROUTE_NAME.YOUR_ROUTE>');
+  lines.push(' */');
+  lines.push('export const RouteLink = BaseRouteLink;');
   lines.push('');
 
   return `${lines.join('\n')}\n`;

@@ -9,5 +9,4 @@ export interface RouteMeta {
   requiresAuth?: boolean;
   roles?: string[];
   redirect?: string | { name: string; path?: string };
-  [key: string]: any;
 }
