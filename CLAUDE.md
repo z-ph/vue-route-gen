@@ -37,6 +37,7 @@ This is **@zphhpzzph/vue-route-gen**, a TypeScript-based npm package that provid
    - Builds route tree structure
    - Handles layout detection and nesting
    - Generates TypeScript code for routes
+   - **Literal type inference**: Converts route metadata values to precise TypeScript literal types (e.g., `"admin"` instead of `string`, `true` instead of `boolean`)
 
 2. **`src/extract-meta.ts`** - Route metadata extraction
    - Parses Vue SFC files using `@vue/compiler-sfc`
@@ -44,12 +45,17 @@ This is **@zphhpzzph/vue-route-gen**, a TypeScript-based npm package that provid
    - Supports JSON and JavaScript object literal syntax
    - Zero runtime overhead - pure build-time extraction
 
-3. **`src/runtime/`** - Runtime type definitions
-   - Provides TypeScript types for route metadata
-   - Allows users to extend `RouteMeta` interface via module augmentation
-   - No runtime components or macros needed
+3. **`src/vite.ts`** - Vite plugin for handling `<route>` blocks
+   - Removes `<route>` custom blocks from Vue files during dev/build
+   - Required in vite.config.ts to avoid parse errors
+   - Must be loaded before the vue plugin (`enforce: 'pre'`)
 
-4. **`src/cli.ts`** - CLI entry point
+4. **`src/hooks.ts`** - Type utility exports (for advanced use cases)
+   - Exports `TypedRoute`, `TypedRouter`, `TypedRouteLocation` types
+   - Exports `createTypedUseRoute` and `createTypedUseRouter` factory functions
+   - Note: Most users should use the generated `useRoute()`/`useRouter()` from `route.gen.ts` instead
+
+5. **`src/cli.ts`** - CLI entry point
    - Simple wrapper that calls `generateRoutes()`
    - Can be invoked directly or as part of build process
 
@@ -58,8 +64,9 @@ This is **@zphhpzzph/vue-route-gen**, a TypeScript-based npm package that provid
 - **Build-time parsing**: Route metadata is extracted during route generation, not at runtime
 - **SFC Custom Blocks**: Uses Vue's standard custom block feature (`<route>`) instead of components or macros
 - **File hash caching**: Caches generated routes based on file hashes to avoid unnecessary rebuilds
-- **Type safety**: Generates complete TypeScript definitions for all routes and parameters
+- **Type safety**: Generates complete TypeScript definitions with literal type inference for all routes and parameters
 - **Framework-agnostic**: Works with any Vue 3 project using Vue Router 4
+- **Literal type metadata**: Route meta values are typed as exact literals (e.g., `title: "User Detail"` instead of `title: string`)
 
 **Route Generation Flow**
 
@@ -72,8 +79,9 @@ This is **@zphhpzzph/vue-route-gen**, a TypeScript-based npm package that provid
 4. Generate TypeScript output:
    - Route constants (ROUTE_NAME, ROUTE_PATH, ROUTE_PATH_BY_NAME)
    - Route parameter types (RouteParams interface with quoted keys for hyphenated names)
+   - Route metadata types (RouteMetaMap interface with literal types extracted from `<route>` blocks)
    - Type-safe useRoute and useRouter hooks
-   - Route records array with merged meta
+   - Route records array with merged meta (rendered as `as const` for literal type inference)
 
 **Excluded Directories**
 
@@ -109,6 +117,25 @@ The following directories are automatically excluded from route scanning:
 </route>
 ```
 
+**Literal Type Inference**
+
+Route metadata values are automatically converted to literal types:
+
+```typescript
+// Generated RouteMetaMap type (literal types)
+interface RouteMetaMap {
+  'users-[id]': {
+    title: "User Detail";      // Literal type, not just string
+    layout: "admin";           // Literal type, not just string
+    requiresAuth: true;        // Literal type true, not boolean
+    roles: ["admin" | "moderator"];  // Union of exact values
+    keepAlive: undefined;      // Missing fields are undefined
+  };
+}
+```
+
+This provides compile-time type safety - TypeScript will catch typos or incorrect values.
+
 **Supported Meta Properties**
 
 - `title` (string) - Page title for document title and breadcrumbs
@@ -117,7 +144,49 @@ The following directories are automatically excluded from route scanning:
 - `requiresAuth` (boolean) - Whether authentication is required
 - `roles` (string[]) - Allowed user roles
 - `redirect` (string | { name: string }) - Redirect configuration
-- Any custom properties (via TypeScript module augmentation)
+- `path` (string) - Override the auto-generated route path
+- `alias` (string | string[]) - Add route aliases
+- `props` (boolean | object) - Enable route props
+- `beforeEnter` (function) - Route-specific navigation guard
+- Any custom properties (users can extend via module augmentation in their projects)
+
+**Complete Route Configuration Override**
+
+The `<route>` block supports all `RouteRecordRaw` fields, allowing complete customization:
+
+```vue
+<route>
+{
+  "path": "/custom-path",
+  "alias": ["/alias1", "/alias2"],
+  "redirect": { "name": "home" },
+  "props": true,
+  "meta": {
+    "title": "Custom Page",
+    "layout": "admin"
+  }
+}
+</route>
+```
+
+User-provided configuration takes precedence over auto-generated defaults.
+
+**Vite Integration Required**
+
+If using `<route>` custom blocks, the Vite plugin is **required** in `vite.config.ts`:
+
+```typescript
+import { routeBlockPlugin } from '@zphhpzzph/vue-route-gen/vite';
+
+export default defineConfig({
+  plugins: [
+    routeBlockPlugin(),  // Must come before vue()
+    vue(),
+  ],
+});
+```
+
+The plugin removes `<route>` blocks at build time since they're already extracted by vue-route-gen.
 
 **Type Safety Patterns**
 
@@ -130,12 +199,14 @@ The following directories are automatically excluded from route scanning:
    }
    ```
 
-2. **Module Augmentation**: Extend RouteMeta for custom properties
+2. **Custom Meta Properties**: Extend route meta types in user projects
    ```typescript
-   declare module '@zphhpzzph/vue-route-gen/runtime' {
+   // In user project's global types file (e.g., src/types/vue-router.d.ts)
+   declare module 'vue-router' {
      interface RouteMeta {
        icon?: string;
        hidden?: boolean;
+       order?: number;
      }
    }
    ```
@@ -148,10 +219,8 @@ packages/vue-route-gen/
 │   ├── index.ts          # Main route generation logic
 │   ├── cli.ts           # CLI entry point
 │   ├── extract-meta.ts  # Route metadata extraction
-│   ├── hooks.ts         # Type-safe router hooks (not currently used)
-│   └── runtime/
-│       ├── index.ts     # Runtime type definitions
-│       └── types.ts     # RouteMeta interface
+│   ├── hooks.ts         # Type utilities (advanced use)
+│   └── vite.ts          # Vite plugin for <route> blocks
 ├── dist/                # Built output (generated by tsc)
 ├── examples/
 │   └── demo-app/        # Example application for testing
@@ -164,6 +233,11 @@ packages/vue-route-gen/
 - `vue-router` (peer dependency) ^4.0.0
 - TypeScript ^5.3.3
 - Node.js >=18.0.0
+
+**Package Exports**
+
+- `.` - Main entry point (`generateRoutes` function, type utilities)
+- `./vite` - Vite plugin (`routeBlockPlugin`)
 
 **Development Workflow**
 
@@ -181,11 +255,12 @@ packages/vue-route-gen/
 
 **Common Tasks**
 
-- **Add new meta property**: Update `RouteMeta` interface in `src/runtime/types.ts`
+- **Add new meta property handling**: No changes needed - all properties are automatically extracted and typed as literals
 - **Change route generation logic**: Modify `src/index.ts`
 - **Fix parsing issues**: Update `src/extract-meta.ts`
 - **Update CLI**: Modify `src/cli.ts`
 - **Test metadata extraction**: Create test files in `examples/demo-app/src/pages/` with `<route>` blocks
+- **Test literal type inference**: Check `RouteMetaMap` type in generated `route.gen.ts`
 
 **Important Notes**
 
@@ -194,3 +269,5 @@ packages/vue-route-gen/
 - The `<route>` custom block is parsed at build-time only, not at runtime
 - Generated routes use hash-based caching to avoid unnecessary rebuilds
 - Cache file location: `node_modules/.cache/route-gen.json`
+- Vite plugin is **required** when using `<route>` blocks to avoid parse errors
+- Literal type inference means metadata values are exact types (e.g., `"admin"` not `string`)

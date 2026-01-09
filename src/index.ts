@@ -1,9 +1,61 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractRouteMeta } from './extract-meta.js';
+import { extractRouteMeta, extractRouteConfig, type RouteConfigOverride } from './extract-meta.js';
 
 const EXCLUDED_DIRS = new Set(['components', 'hooks', 'services','types','constants','utils']);
 const CACHE_FILE = path.resolve(process.cwd(), 'node_modules/.cache/route-gen.json');
+
+/**
+ * Convert a value to its TypeScript literal type representation
+ * Generates precise literal types instead of wide types like string/boolean
+ */
+function valueToLiteralType(value: any): string {
+  if (value === null) {
+    return 'null';
+  }
+  if (value === undefined) {
+    return 'undefined';
+  }
+
+  const valueType = typeof value;
+
+  // Handle primitive types with literal values
+  if (valueType === 'string') {
+    return JSON.stringify(value); // Returns "value" with quotes
+  }
+  if (valueType === 'boolean') {
+    return value ? 'true' : 'false';
+  }
+  if (valueType === 'number') {
+    return value.toString();
+  }
+
+  // Handle arrays
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return '[]';
+    }
+    const elementType = value.map(v => valueToLiteralType(v)).join(' | ');
+    return `[${elementType}]`;
+  }
+
+  // Handle objects
+  if (valueType === 'object') {
+    const entries = Object.entries(value);
+    if (entries.length === 0) {
+      return '{}';
+    }
+    const fields = entries
+      .map(([key, val]) => {
+        const literalType = valueToLiteralType(val);
+        return `    ${key}: ${literalType}`;
+      })
+      .join(';\n');
+    return `{\n${fields}\n  }`;
+  }
+
+  return 'any';
+}
 
 export interface GenerateRoutesOptions {
   pagesDir?: string;
@@ -17,6 +69,7 @@ export interface RouteEntry {
   children: RouteEntry[];
   params?: string[];
   meta?: Record<string, any>;
+  configOverride?: RouteConfigOverride;
 }
 
 export interface RouteData {
@@ -25,6 +78,7 @@ export interface RouteData {
   routePathList: readonly string[];
   routePathByName: [string, string][];
   routeParamsByName: [string, string[]][];
+  routeKeyData: Array<{ name: string; path: string; defaultName: string }>;
 }
 
 interface FileCache {
@@ -36,6 +90,7 @@ interface RouteKeyEntry {
   key: string;
   name: string;
   path: string;
+  defaultName: string; // Original name from file path (for constant key generation)
 }
 
 function normalizePath(p: string): string {
@@ -148,6 +203,36 @@ function segmentsToPath(segments: string[], leadingSlash: boolean): string {
   return cleaned;
 }
 
+/**
+ * Apply route configuration override to default route entry
+ * Merges user-provided config with auto-generated defaults
+ */
+function applyConfigOverride(route: RouteEntry): RouteEntry {
+  if (!route.configOverride) {
+    return route;
+  }
+
+  const override = route.configOverride;
+  const merged: RouteEntry = {
+    ...route,
+    // User config takes precedence
+    path: override.path ?? route.path,
+    name: override.name ?? route.name,
+    // component is always auto-generated from the file
+    importPath: route.importPath,
+  };
+
+  // Merge meta: user config overrides defaults
+  if (override.meta || route.meta) {
+    merged.meta = {
+      ...route.meta,
+      ...override.meta,
+    };
+  }
+
+  return merged;
+}
+
 function joinPaths(parent: string, child: string): string {
   if (!child) {
     return parent || '/';
@@ -158,28 +243,87 @@ function joinPaths(parent: string, child: string): string {
   return `${parent.replace(/\/$/, '')}/${child}`.replace(/\/+/g, '/');
 }
 
+function renderMetaAsConst(meta: Record<string, any>, indent: string): string {
+  const lines: string[] = [];
+  const nextIndent = `${indent}  `;
+
+  lines.push(`${indent}{`);
+  for (const [key, value] of Object.entries(meta)) {
+    if (typeof value === 'string') {
+      lines.push(`${nextIndent}${JSON.stringify(key)}: ${JSON.stringify(value)},`);
+    } else if (typeof value === 'boolean') {
+      lines.push(`${nextIndent}${JSON.stringify(key)}: ${value},`);
+    } else if (typeof value === 'number') {
+      lines.push(`${nextIndent}${JSON.stringify(key)}: ${value},`);
+    } else if (Array.isArray(value)) {
+      const arrayStr = value.map(v => JSON.stringify(v)).join(', ');
+      lines.push(`${nextIndent}${JSON.stringify(key)}: [${arrayStr}],`);
+    } else if (typeof value === 'object' && value !== null) {
+      lines.push(`${nextIndent}${JSON.stringify(key)}: ${JSON.stringify(value)},`);
+    } else {
+      lines.push(`${nextIndent}${JSON.stringify(key)}: ${JSON.stringify(value)},`);
+    }
+  }
+  lines.push(`${indent}} as const`);
+
+  return lines.join('\n');
+}
+
 function renderRoute(route: RouteEntry, indent = '  '): string {
   const nextIndent = `${indent}  `;
   const lines: string[] = [];
 
+  // Apply configuration override
+  const finalRoute = applyConfigOverride(route);
+  const override = route.configOverride;
+
   lines.push(`${indent}{`);
-  lines.push(`${nextIndent}path: ${JSON.stringify(route.path)},`);
-  lines.push(`${nextIndent}name: ${JSON.stringify(route.name)},`);
+  lines.push(`${nextIndent}path: ${JSON.stringify(finalRoute.path)},`);
+  lines.push(`${nextIndent}name: ${JSON.stringify(finalRoute.name)},`);
   lines.push(
-    `${nextIndent}component: () => import(${JSON.stringify(route.importPath)}),`
+    `${nextIndent}component: () => import(${JSON.stringify(finalRoute.importPath)}),`
   );
 
-  // Add meta if present
-  if (route.meta && Object.keys(route.meta).length > 0) {
-    lines.push(`${nextIndent}meta: ${JSON.stringify(route.meta)},`);
+  // Render additional RouteRecordRaw fields from override
+  if (override) {
+    if (override.alias !== undefined) {
+      if (Array.isArray(override.alias)) {
+        lines.push(`${nextIndent}alias: [${override.alias.map(a => JSON.stringify(a)).join(', ')}],`);
+      } else {
+        lines.push(`${nextIndent}alias: ${JSON.stringify(override.alias)},`);
+      }
+    }
+
+    if (override.redirect !== undefined) {
+      lines.push(`${nextIndent}redirect: ${JSON.stringify(override.redirect)},`);
+    }
+
+    if (override.props !== undefined) {
+      if (typeof override.props === 'boolean') {
+        lines.push(`${nextIndent}props: ${override.props},`);
+      } else if (typeof override.props === 'object') {
+        lines.push(`${nextIndent}props: ${JSON.stringify(override.props)},`);
+      } else {
+        lines.push(`${nextIndent}props: ${override.props},`);
+      }
+    }
+
+    if (override.beforeEnter !== undefined) {
+      lines.push(`${nextIndent}beforeEnter: ${override.beforeEnter},`);
+    }
   }
 
-  if (route.children.length === 0) {
+  // Add meta if present (rendered as const for type inference)
+  if (finalRoute.meta && Object.keys(finalRoute.meta).length > 0) {
+    lines.push(`${nextIndent}meta: ${renderMetaAsConst(finalRoute.meta, nextIndent)},`);
+  }
+
+  if (finalRoute.children.length === 0) {
     lines.push(`${nextIndent}children: [],`);
   } else {
     lines.push(`${nextIndent}children: [`);
     lines.push(
-      route.children
+      finalRoute.children
         .map((child) => renderRoute(child, `${nextIndent}  `))
         .join(',\n')
     );
@@ -278,27 +422,33 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
     layoutGroups.set(layoutKey, group);
   }
 
-  const routeEntries: Array<{ name: string; path: string; params: string[] }> = [];
+  const routeEntries: Array<{ name: string; path: string; params: string[]; defaultName: string }> = [];
   const standaloneRoutes = standalonePages.map((page) => {
-    const name = page.segments.join('-');
+    const defaultName = page.segments.join('-');
     const routePath = segmentsToPath(page.segments, true);
     const params = page.segments
       .map((s) => extractParamName(s))
       .filter((p): p is string => p !== null);
 
-    routeEntries.push({ name, path: routePath, params });
-
-    // Extract meta from page component
+    // Extract config and meta from page component
     const fullPath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
+    const configOverride = extractRouteConfig(fullPath);
     const meta = extractRouteMeta(fullPath);
+
+    // Apply config override to get the final name and path
+    const finalName = configOverride?.name ?? defaultName;
+    const finalPath = configOverride?.path ?? routePath;
+
+    routeEntries.push({ name: finalName, path: finalPath, params, defaultName });
 
     return {
       path: routePath,
-      name,
+      name: finalName, // Use overridden name
       importPath: page.importPath,
       children: [],
       params,
       meta,
+      configOverride,
     };
   });
 
@@ -316,10 +466,10 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
         .map((s) => extractParamName(s))
         .filter((p): p is string => p !== null);
 
-      routeEntries.push({ name: layoutName, path: layoutPath, params: layoutParams });
+      routeEntries.push({ name: layoutName, path: layoutPath, params: layoutParams, defaultName: layoutName });
 
       const children = sortedPages.map((page) => {
-        const name = page.segments.join('-');
+        const defaultName = page.segments.join('-');
         const relativeSegments = page.segments.slice(layout.segments.length);
         const childPath = segmentsToPath(relativeSegments, false);
         const fullPath = joinPaths(layoutPath, childPath);
@@ -327,19 +477,25 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
           .map((s) => extractParamName(s))
           .filter((p): p is string => p !== null);
 
-        routeEntries.push({ name, path: fullPath, params });
-
-        // Extract meta from page component
+        // Extract config and meta from page component
         const pageFilePath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
+        const configOverride = extractRouteConfig(pageFilePath);
         const meta = extractRouteMeta(pageFilePath);
+
+        // Apply config override to get the final name and path
+        const finalName = configOverride?.name ?? defaultName;
+        const finalPath = configOverride?.path ?? fullPath;
+
+        routeEntries.push({ name: finalName, path: finalPath, params, defaultName });
 
         return {
           path: childPath,
-          name,
+          name: finalName, // Use overridden name
           importPath: page.importPath,
           children: [],
           params,
           meta,
+          configOverride,
         };
       });
 
@@ -375,6 +531,7 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
     routePathList: uniquePaths,
     routePathByName,
     routeParamsByName: Array.from(paramsByName.entries()),
+    routeKeyData: routeEntries,
   };
 }
 
@@ -383,7 +540,8 @@ function renderRoutesFile({
   routeNameList,
   routePathList,
   routePathByName,
-  routeParamsByName
+  routeParamsByName,
+  routeKeyData
 }: RouteData): string {
   const lines: string[] = [];
   const pathByName = new Map<string, string>(routePathByName);
@@ -391,8 +549,17 @@ function renderRoutesFile({
   const routeKeyEntries: RouteKeyEntry[] = [];
   const usedKeys = new Set<string>();
 
+  // Build map of route entries by name for quick lookup
+  const entryMap = new Map<string, { name: string; path: string; defaultName: string }>();
+  for (const entry of routeKeyData) {
+    entryMap.set(entry.name, { name: entry.name, path: entry.path, defaultName: entry.defaultName });
+  }
+
   for (const name of routeNameList) {
-    const baseKey = toConstKey(name) || 'ROUTE';
+    const entry = entryMap.get(name);
+    if (!entry) continue;
+
+    const baseKey = toConstKey(entry.defaultName) || 'ROUTE';
     let key = baseKey;
     let suffix = 1;
     while (usedKeys.has(key)) {
@@ -402,8 +569,9 @@ function renderRoutesFile({
     usedKeys.add(key);
     routeKeyEntries.push({
       key,
-      name,
-      path: pathByName.get(name)!,
+      name: entry.name,
+      path: entry.path,
+      defaultName: entry.defaultName,
     });
   }
 
@@ -485,39 +653,40 @@ function renderRoutesFile({
   lines.push('export type RouteParamsByName<T extends RouteName> = RouteParams[T];');
   lines.push('');
 
-  // Generate route meta types
+  // Collect all unique meta keys across all routes
+  const allMetaKeys = new Set<string>();
+  for (const route of routes) {
+    if (route.meta) {
+      Object.keys(route.meta).forEach(key => allMetaKeys.add(key));
+    }
+  }
+  const sortedMetaKeys = Array.from(allMetaKeys).sort();
+
+  // Generate route meta types with literal types
   lines.push('// Route metadata types (extracted from <route> blocks)');
+  lines.push('// Uses literal types for precise type inference');
+  lines.push('// Missing fields are typed as undefined to ensure consistent shape');
   lines.push('export interface RouteMetaMap {');
   for (const route of routes) {
     const routeName = route.name;
-    const meta = route.meta;
+    const meta = route.meta || {};
 
-    if (meta && Object.keys(meta).length > 0) {
-      // Generate type definition for this route's meta
-      const metaFields = Object.entries(meta)
-        .map(([key, value]) => {
-          const valueType = typeof value;
-          if (valueType === 'string') {
-            return `    ${key}: string;`;
-          } else if (valueType === 'boolean') {
-            return `    ${key}: boolean;`;
-          } else if (valueType === 'number') {
-            return `    ${key}: number;`;
-          } else if (Array.isArray(value)) {
-            return `    ${key}: ${typeof value[0]}[];`;
-          } else if (valueType === 'object') {
-            return `    ${key}: Record<string, any>;`;
-          }
-          return `    ${key}: any;`;
-        })
-        .join('\n');
+    // Generate type definition with all possible fields
+    // Missing fields are typed as undefined
+    const metaFields = sortedMetaKeys
+      .map((key) => {
+        if (key in meta) {
+          const literalType = valueToLiteralType(meta[key]);
+          return `    ${key}: ${literalType};`;
+        } else {
+          return `    ${key}: undefined;`;
+        }
+      })
+      .join('\n');
 
-      lines.push(`  '${routeName}': {`);
-      lines.push(metaFields);
-      lines.push(`  };`);
-    } else {
-      lines.push(`  '${routeName}': Record<string, never>;`);
-    }
+    lines.push(`  '${routeName}': {`);
+    lines.push(metaFields);
+    lines.push(`  };`);
   }
   lines.push('}');
   lines.push('');
@@ -593,34 +762,6 @@ function renderRoutesFile({
   lines.push('  const router = vueUseRouter();');
   lines.push('  return router as any;');
   lines.push('}');
-  lines.push('');
-
-  // Add type-enhanced RouteLink component
-  lines.push('// Type-enhanced RouteLink component');
-  lines.push("import { RouteLink as BaseRouteLink } from '@zphhpzzph/vue-route-gen/runtime';");
-  lines.push('');
-
-  lines.push('/**');
-  lines.push(' * Type-safe RouteLink component');
-  lines.push(' *');
-  lines.push(' * For full type safety, use the component with specific route name and params:');
-  lines.push(' *');
-  lines.push(' * @example');
-  lines.push(' * ```vue');
-  lines.push(' * <RouteLink :name="ROUTE_NAME.USERS_ID" :params="{ id: \'123\' }">');
-  lines.push(' *   View User');
-  lines.push(' * </RouteLink>');
-  lines.push(' *');
-  lines.push(' * <RouteLink :name="ROUTE_NAME.INDEX">');
-  lines.push(' *   Home');
-  lines.push(' * </RouteLink>');
-  lines.push(' * ```');
-  lines.push(' *');
-  lines.push(' * Type helpers:');
-  lines.push(' * - `name`: RouteName (autocompletes route names)');
-  lines.push(' * - `params`: RouteParamsByName<typeof ROUTE_NAME.YOUR_ROUTE>');
-  lines.push(' */');
-  lines.push('export const RouteLink = BaseRouteLink;');
   lines.push('');
 
   return `${lines.join('\n')}\n`;

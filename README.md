@@ -14,6 +14,7 @@ Vue 3 基于文件系统的路由生成器，为 Vue Router 提供完整的类�
 - **类型安全的路由 Hooks**（`useRoute` 和 `useRouter` 提供完整类型推断）
 - **自动从动态路由提取参数类型**
 - **`<route>` 自定义块支持** - 在 SFC 中定义路由元数据，零运行时开销
+- **精确的字面量类型推断** - 为路由元数据提供编译时类型安全，详见 [字面量类型推断文档](./docs/LiteralTypes.md)
 
 ## 安装
 
@@ -113,7 +114,6 @@ export default defineConfig({
 8. `routes` - Vue Router 路由记录数组
 9. `useRoute()` - 类型安全的路由访问 Hook，提供参数和元数据类型推断
 10. `useRouter()` - 类型安全的路由导航 Hook，提供参数验证
-11. `RouteLink` - 类型安全的路由链接组件，提供完整的参数类型推导
 
 ## 使用 `<route>` 自定义块
 
@@ -493,50 +493,6 @@ router.push({
 });
 ```
 
-### 使用 RouteLink 组件
-
-生成的 `RouteLink` 组件提供类型安全的路由链接：
-
-```vue
-<script setup lang="ts">
-import { RouteLink, ROUTE_NAME } from '@/router/route.gen';
-
-const userId = '123';
-</script>
-
-<template>
-  <!-- 基础路由链接（无需参数） -->
-  <RouteLink :name="ROUTE_NAME.INDEX">
-    首页
-  </RouteLink>
-
-  <!-- 带参数的路由链接（类型安全） -->
-  <RouteLink :name="ROUTE_NAME.USERS_ID" :params="{ id: userId }">
-    查看用户
-  </RouteLink>
-
-  <!-- 带查询参数 -->
-  <RouteLink :name="ROUTE_NAME.USERS_INDEX" :query="{ page: '1' }">
-    用户列表
-  </RouteLink>
-
-  <!-- 使用 custom 模式自定义渲染 -->
-  <RouteLink :name="ROUTE_NAME.ABOUT" custom v-slot="{ navigate, href }">
-    <a :href="href" @click="navigate">
-      关于我们（自定义样式）
-    </a>
-  </RouteLink>
-</template>
-```
-
-**类型安全特性：**
-- ✅ `name` 属性会自动补全所有可用路由
-- ✅ `params` 根据路由名称自动推导类型
-- ✅ 缺少必需参数时 TypeScript 报错
-- ✅ 参数名称或类型错误时 TypeScript 报错
-
-详细文档请参阅：[RouteLink 组件文档](./docs/RouteLink.md)
-
 ## 完整示例
 
 ### 项目结构
@@ -694,8 +650,9 @@ src/pages/
 ## 📚 文档
 
 查看完整文档：
-- **[文档索引](./docs/README.md)** - 所有文档的导航目录
-- **[RouteLink 组件文档](./docs/RouteLink.md)** - 类型安全的路由链接组件
+- **[文档索引](./docs/README.md)** - 所有文档���导航目录
+- **[更新日志](./CHANGELOG.md)** - 版本更新记录和迁移指南
+- **[路由元数据字面量类型推断](./docs/LiteralTypes.md)** - 精确的类型推断系统详解
 - **[<route> 自定义块指南](./docs/RouteBlocks.md)** - 在 SFC 中定义路由元数据
 
 ## 发布新版本（维护者）
