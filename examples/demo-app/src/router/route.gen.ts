@@ -5,6 +5,7 @@ import type { RouteRecordRaw, RouteLocationNormalizedLoaded, Router, LocationQue
 export const ROUTE_NAME = {
   ABOUT: "about",
   INDEX: "index",
+  TEST_OVERRIDE: "test",
   USERS_ID: "users-[id]",
   USERS_INDEX: "users-index",
 } as const;
@@ -14,6 +15,7 @@ export type RouteName = (typeof ROUTE_NAME)[keyof typeof ROUTE_NAME];
 export const ROUTE_PATH = {
   ABOUT: "/about",
   INDEX: "/",
+  TEST_OVERRIDE: "/custom-test-path",
   USERS_ID: "/users/:id",
   USERS_INDEX: "/users",
 } as const;
@@ -23,6 +25,7 @@ export type RoutePath = (typeof ROUTE_PATH)[keyof typeof ROUTE_PATH];
 export const ROUTE_PATH_BY_NAME = {
   "about": ROUTE_PATH.ABOUT,
   "index": ROUTE_PATH.INDEX,
+  "test": ROUTE_PATH.TEST_OVERRIDE,
   "users-[id]": ROUTE_PATH.USERS_ID,
   "users-index": ROUTE_PATH.USERS_INDEX,
 } as const;
@@ -32,6 +35,7 @@ export type RoutePathByName = typeof ROUTE_PATH_BY_NAME;
 export const routeNameList = [
   "about",
   "index",
+  "test",
   "users-[id]",
   "users-index",
 ] as const;
@@ -39,6 +43,7 @@ export const routeNameList = [
 export const routePathList = [
   "/about",
   "/",
+  "/custom-test-path",
   "/users/:id",
   "/users",
 ] as const;
@@ -46,6 +51,7 @@ export const routePathList = [
 export const routePathByName = {
   "about": "/about",
   "index": "/",
+  "test": "/custom-test-path",
   "users-[id]": "/users/:id",
   "users-index": "/users",
 } as const;
@@ -54,6 +60,7 @@ export const routePathByName = {
 export interface RouteParams {
   'about': Record<string, never>;
   'index': Record<string, never>;
+  'test': Record<string, never>;
   'users-[id]': {
     id: string;
   };
@@ -63,30 +70,38 @@ export interface RouteParams {
 export type RouteParamsByName<T extends RouteName> = RouteParams[T];
 
 // Route metadata types (extracted from <route> blocks)
+// Uses literal types for precise type inference
+// Missing fields are typed as undefined to ensure consistent shape
 export interface RouteMetaMap {
   'about': {
-    title: string;
-    layout: string;
-    keepAlive: boolean;
-    requiresAuth: boolean;
+    layout: undefined;
+    requiresAuth: undefined;
+    roles: undefined;
+    title: undefined;
   };
   'index': {
-    title: string;
-    layout: string;
-    keepAlive: boolean;
-    requiresAuth: boolean;
+    layout: undefined;
+    requiresAuth: undefined;
+    roles: undefined;
+    title: undefined;
+  };
+  'test': {
+    layout: "admin";
+    requiresAuth: true;
+    roles: ["admin"];
+    title: "Test Override";
   };
   'users-[id]': {
-    title: string;
-    layout: string;
-    requiresAuth: boolean;
-    roles: string[];
+    layout: undefined;
+    requiresAuth: undefined;
+    roles: undefined;
+    title: undefined;
   };
   'users-index': {
-    title: string;
-    layout: string;
-    requiresAuth: boolean;
-    roles: string[];
+    layout: undefined;
+    requiresAuth: undefined;
+    roles: undefined;
+    title: undefined;
   };
 }
 
@@ -97,28 +112,38 @@ export const routes = [
     path: "/about",
     name: "about",
     component: () => import("../pages/about.vue"),
-    meta: {"title":"About Us","layout":"default","keepAlive":false,"requiresAuth":false},
     children: [],
   },
   {
     path: "/",
     name: "index",
     component: () => import("../pages/index.vue"),
-    meta: {"title":"Home","layout":"default","keepAlive":true,"requiresAuth":false},
+    children: [],
+  },
+  {
+    path: "/custom-test-path",
+    name: "test",
+    component: () => import("../pages/test-override.vue"),
+    alias: ["/test-alias", "/t"],
+    props: true,
+    meta:     {
+      "title": "Test Override",
+      "layout": "admin",
+      "requiresAuth": true,
+      "roles": ["admin"],
+    } as const,
     children: [],
   },
   {
     path: "/users/:id",
     name: "users-[id]",
     component: () => import("../pages/users/[id].vue"),
-    meta: {"title":"User Detail","layout":"admin","requiresAuth":true,"roles":["admin","moderator"]},
     children: [],
   },
   {
     path: "/users",
     name: "users-index",
     component: () => import("../pages/users/index.vue"),
-    meta: {"title":"Users List","layout":"admin","requiresAuth":true,"roles":["admin"]},
     children: [],
   }
 ] satisfies RouteRecordRaw[];
@@ -181,29 +206,4 @@ export function useRouter(): Omit<Router, 'push' | 'replace'> & {
   const router = vueUseRouter();
   return router as any;
 }
-
-// Type-enhanced RouteLink component
-import { RouteLink as BaseRouteLink } from '@zphhpzzph/vue-route-gen/runtime';
-
-/**
- * Type-safe RouteLink component
- *
- * For full type safety, use the component with specific route name and params:
- *
- * @example
- * ```vue
- * <RouteLink :name="ROUTE_NAME.USERS_ID" :params="{ id: '123' }">
- *   View User
- * </RouteLink>
- *
- * <RouteLink :name="ROUTE_NAME.INDEX">
- *   Home
- * </RouteLink>
- * ```
- *
- * Type helpers:
- * - `name`: RouteName (autocompletes route names)
- * - `params`: RouteParamsByName<typeof ROUTE_NAME.YOUR_ROUTE>
- */
-export const RouteLink = BaseRouteLink;
 

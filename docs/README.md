@@ -7,20 +7,19 @@
 ### 核心功能
 
 - **[路由元数据字面量类型推断](./LiteralTypes.md)** - 精确的类型推断系统
-  - 字面量类��� vs 宽泛类型
+  - 字面量类型 vs 宽泛类型
   - 工作原理和类型推断规则
   - 实际应用示例
   - 高级用法和最佳实践
   - 迁移指南
 
-
-- **[<route> 自定义块指南](./RouteBlocks.md)** - 在 SFC 中定义路由元数据
-  - 工作原理
-  - 语法支持（JSON 和 JavaScript 对象）
-  - 标准元数据属性
-  - 自定义元数据属性
-  - 实际应用示例
-  - 最佳实践
+- **[Vite 插件使用指南](./VitePlugin.md)** - 自动路由生成和智能更新
+  - 插件功能介绍
+  - 配置选项详解
+  - 智能更新机制
+  - 性能优化建议
+  - 开发体验优化
+  - 常见问题解答
 
 ## 快速开始
 
@@ -28,8 +27,7 @@
 
 1. [主 README](../README.md) - 了解项目特性和基本用法
 2. [路由元数据字面量类型推断](./LiteralTypes.md) - 理解精确的类型推断系统
-3. [<route> 自定义块指南](./RouteBlocks.md) - 学习如何在组件中定义路由元数据
-4. [RouteLink 组件文档](./RouteLink.md) - 学习如何使用类型安全的路由链接
+3. [Vite 插件使用指南](./VitePlugin.md) - 学习如何配置和使用 Vite 插件
 
 ## 贡献文档
 
@@ -40,3 +38,4 @@
 - [Vue Router 官方文档](https://router.vuejs.org/)
 - [TypeScript 官方文档](https://www.typescriptlang.org/)
 - [Vue 3 官方文档](https://vuejs.org/)
+- [Vite 官方文档](https://vitejs.dev/)

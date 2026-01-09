@@ -67,7 +67,11 @@ src/pages/
 
 ### Vite 配置
 
-如果使用 `<route>` 自定义块定义路由元数据，需要在 `vite.config.ts` 中添加插件：
+`@zphhpzzph/vue-route-gen` 提供了两个 Vite 插件：
+
+#### 1. `routeBlockPlugin()` - 处理路由自定义块（必需）
+
+必须添加，用于移除 `<route>` 自定义块和 `defineRoute()` 宏：
 
 ```typescript
 // vite.config.ts
@@ -77,13 +81,53 @@ import { routeBlockPlugin } from '@zphhpzzph/vue-route-gen/vite';
 
 export default defineConfig({
   plugins: [
-    routeBlockPlugin(),  // 处理 <route> 自定义块
+    routeBlockPlugin(),  // 处理 <route> 自定义块和 defineRoute()
     vue(),
   ],
 });
 ```
 
 **注意**：`routeBlockPlugin` 会移除 `<route>` 自定义块，因为这些块已经在构建时被 `vue-route-gen` 提取并合并到路由配置中，不需要在运行时处理。
+
+#### 2. `routeGenPlugin()` - 自动生成路由（推荐）
+
+**开发体验优化**：自动监听文件变化并重新生成路由，无需手动运行命令。
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { routeBlockPlugin, routeGenPlugin } from '@zphhpzzph/vue-route-gen/vite';
+
+export default defineConfig({
+  plugins: [
+    routeBlockPlugin(),  // 1. 最先执行
+    routeGenPlugin(),    // 2. 自动生成路由
+    vue(),               // 3. Vue 插件
+  ],
+});
+```
+
+**功能特性**：
+
+- ✅ 开发服务器启动时自动生成路由
+- ✅ 监听 `pages` 目录的文件变化
+- ✅ 智能判断是否需要重新生成（避免不必要的重建）
+- ✅ 自动触发 HMR 更新
+- ✅ 支持自定义配置
+
+**自定义配置**：
+
+```typescript
+routeGenPlugin({
+  pagesDir: './src/pages',      // 可选，默认 'src/pages'
+  outFile: './src/router/route.gen.ts',  // 可选，默认 'src/router/route.gen.ts'
+})
+```
+
+**插件顺序**：`routeBlockPlugin()` → `routeGenPlugin()` → `vue()`
+
+详细文档：[Vite 插件使用指南](./docs/VitePlugin.md)
 
 ### 生成器选项
 
@@ -611,7 +655,7 @@ router.push({
 
 **注意**：大多数情况下，你应该使用生成的 `useRoute()` 和 `useRouter()` hooks（从 `route.gen.ts` 导入），它们已经提供了完整的类型安全。这些底层类型工具主要用于高级自定义场景。
 
-> 💡 **深入阅读**：关于 `<route>` 自定义块的完整使用指南，请参阅 [`<route> 自定义块完整指南`](./docs/RouteBlocks.md)
+> 💡 **深入阅读**：更多高级用法和完整文档，请参阅[文档索引](./docs/README.md)
 
 ### 获取特定路由的参数类型
 
@@ -653,7 +697,7 @@ src/pages/
 - **[文档索引](./docs/README.md)** - 所有文档���导航目录
 - **[更新日志](./CHANGELOG.md)** - 版本更新记录和迁移指南
 - **[路由元数据字面量类型推断](./docs/LiteralTypes.md)** - 精确的类型推断系统详解
-- **[<route> 自定义块指南](./docs/RouteBlocks.md)** - 在 SFC 中定义路由元数据
+- **[Vite 插件使用指南](./docs/VitePlugin.md)** - 自动路由生成和智能更新
 
 ## 发布新版本（维护者）
 
