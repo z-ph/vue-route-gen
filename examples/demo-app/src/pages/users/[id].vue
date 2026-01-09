@@ -1,18 +1,16 @@
 <template>
   <div>
-    <h1>{{ title }}</h1>
-    <p>Viewing user: {{ id }}</p>
+    <h1>{{ route.meta.title }}</h1>
+    <p>Viewing user: {{ route.params.id }}</p>
+    <p>roles:{{ route.meta.roles }}</p>
+    <p>requiresAuth:{{ route.meta.requiresAuth }}</p>
+    <button @click="router.push({ name: 'index' })">去首页</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useRoute, useRouter } from '../../router/route.gen';
+import { useRoute, useRouter } from '@/router';
 const route = useRoute();
-const title = route.meta.title;
-const id = route.params.id;
-const roles = route.meta.roles
-const requiresAuth = route.meta.requiresAuth
-// 正常的脚本逻辑
 const router = useRouter()
 </script>
 <route>

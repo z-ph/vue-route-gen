@@ -1,0 +1,24 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+      "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+      "lib": [
+      "ESNext",
+      "DOM",         // 必须包含这一项以识别 HTMLInputElement
+      "DOM.Iterable" // 建议包含，用于支持 NodeList 等迭代
+    ],
+      /* Linting */
+      "strict": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "erasableSyntaxOnly": true,
+      "noFallthroughCasesInSwitch": true,
+      "noUncheckedSideEffectImports": true,
+      "types": ["element-plus/global"],
+      "baseUrl": ".",
+      "paths": {
+          "@/*": ["src/*"]
+      }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+}
