@@ -1,20 +1,10 @@
 import fs from 'node:fs';
 import { parse } from '@vue/compiler-sfc';
 
-export interface RouteMeta {
-  title?: string;
-  layout?: string | false;
-  keepAlive?: boolean;
-  requiresAuth?: boolean;
-  roles?: string[];
-  redirect?: string | { name: string; path?: string };
-  [key: string]: any;
-}
-
 /**
  * Parse Vue SFC and extract metadata from <route> custom block
  */
-export function extractRouteMeta(filePath: string): RouteMeta {
+export function extractRouteMeta(filePath: string): Record<string, any> {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const { descriptor } = parse(content);
@@ -41,7 +31,7 @@ export function extractRouteMeta(filePath: string): RouteMeta {
  * Parse the content of <route> custom block
  * The content should be valid JSON or JavaScript object literal
  */
-function parseRouteBlockContent(content: string): RouteMeta {
+function parseRouteBlockContent(content: string): Record<string, any> {
   const trimmed = content.trim();
 
   try {

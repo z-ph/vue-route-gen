@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractRouteMeta, type RouteMeta } from './extract-meta.js';
-
-export type { RouteMeta } from './extract-meta.js';
+import { extractRouteMeta } from './extract-meta.js';
 
 const EXCLUDED_DIRS = new Set(['components', 'hooks', 'services','types','constants','utils']);
 const CACHE_FILE = path.resolve(process.cwd(), 'node_modules/.cache/route-gen.json');
@@ -18,7 +16,7 @@ export interface RouteEntry {
   importPath: string;
   children: RouteEntry[];
   params?: string[];
-  meta?: RouteMeta;
+  meta?: Record<string, any>;
 }
 
 export interface RouteData {
@@ -516,20 +514,15 @@ function renderRoutesFile({
 
       lines.push(`  '${routeName}': {`);
       lines.push(metaFields);
-      lines.push(`  } & RouteMeta;`);
+      lines.push(`  };`);
     } else {
-      lines.push(`  '${routeName}': RouteMeta;`);
+      lines.push(`  '${routeName}': Record<string, never>;`);
     }
   }
   lines.push('}');
   lines.push('');
 
   lines.push('export type RouteMetaByName<T extends RouteName> = RouteMetaMap[T];');
-  lines.push('');
-  lines.push('// Import base RouteMeta type');
-  lines.push("import type { RouteMeta as BaseRouteMeta } from '@zphhpzzph/vue-route-gen/runtime';");
-  lines.push('// Type alias for backward compatibility');
-  lines.push('export type RouteMeta = BaseRouteMeta;');
   lines.push('');
 
   lines.push('export const routes = [');

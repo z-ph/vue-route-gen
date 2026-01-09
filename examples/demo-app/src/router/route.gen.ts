@@ -69,33 +69,28 @@ export interface RouteMetaMap {
     layout: string;
     keepAlive: boolean;
     requiresAuth: boolean;
-  } & RouteMeta;
+  };
   'index': {
     title: string;
     layout: string;
     keepAlive: boolean;
     requiresAuth: boolean;
-  } & RouteMeta;
+  };
   'users-[id]': {
     title: string;
     layout: string;
     requiresAuth: boolean;
     roles: string[];
-  } & RouteMeta;
+  };
   'users-index': {
     title: string;
     layout: string;
     requiresAuth: boolean;
     roles: string[];
-  } & RouteMeta;
+  };
 }
 
 export type RouteMetaByName<T extends RouteName> = RouteMetaMap[T];
-
-// Import base RouteMeta type
-import type { RouteMeta as BaseRouteMeta } from '@zphhpzzph/vue-route-gen/runtime';
-// Type alias for backward compatibility
-export type RouteMeta = BaseRouteMeta;
 
 export const routes = [
   {
