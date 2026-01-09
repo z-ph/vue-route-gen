@@ -75,7 +75,7 @@ The following directories are automatically excluded:
 - `hooks`
 - `services`
 - `types`
-- `contants`
+- `constants`
 - `utils`
 
 ## Generated Output

@@ -75,7 +75,7 @@ src/pages/
 - `hooks`
 - `services`
 - `types`
-- `contants`
+- `constants`
 - `utils`
 
 ## 生成内容
