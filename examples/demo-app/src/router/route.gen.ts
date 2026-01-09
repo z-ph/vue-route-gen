@@ -62,6 +62,41 @@ export interface RouteParams {
 
 export type RouteParamsByName<T extends RouteName> = RouteParams[T];
 
+// Route metadata types (extracted from <route> blocks)
+export interface RouteMetaMap {
+  'about': {
+    title: string;
+    layout: string;
+    keepAlive: boolean;
+    requiresAuth: boolean;
+  } & RouteMeta;
+  'index': {
+    title: string;
+    layout: string;
+    keepAlive: boolean;
+    requiresAuth: boolean;
+  } & RouteMeta;
+  'users-[id]': {
+    title: string;
+    layout: string;
+    requiresAuth: boolean;
+    roles: string[];
+  } & RouteMeta;
+  'users-index': {
+    title: string;
+    layout: string;
+    requiresAuth: boolean;
+    roles: string[];
+  } & RouteMeta;
+}
+
+export type RouteMetaByName<T extends RouteName> = RouteMetaMap[T];
+
+// Import base RouteMeta type
+import type { RouteMeta as BaseRouteMeta } from '@zphhpzzph/vue-route-gen/runtime';
+// Type alias for backward compatibility
+export type RouteMeta = BaseRouteMeta;
+
 export const routes = [
   {
     path: "/about",
@@ -100,19 +135,21 @@ import { useRoute as vueUseRoute, useRouter as vueUseRouter } from 'vue-router';
 
 /**
  * Type-safe useRoute hook
- * Route params are typed based on the current route name
+ * Route params and meta are typed based on the current route name
  *
  * @example
  * ```ts
  * const route = useRoute();
  * // route.params.id is typed as string if route has :id param
+ * // route.meta.title is typed based on the route's <route> block
  * ```
  */
 export function useRoute<TName extends RouteName = RouteName>(
   name?: TName
-): Omit<RouteLocationNormalizedLoaded, 'params' | 'name'> & {
+): Omit<RouteLocationNormalizedLoaded, 'params' | 'name' | 'meta'> & {
   name: TName;
   params: TName extends keyof RouteParams ? RouteParams[TName] : RouteParams[RouteName];
+  meta: TName extends keyof RouteMetaMap ? RouteMetaMap[TName] : RouteMetaMap[RouteName];
 } {
   return vueUseRoute() as any;
 }
@@ -149,4 +186,29 @@ export function useRouter(): Omit<Router, 'push' | 'replace'> & {
   const router = vueUseRouter();
   return router as any;
 }
+
+// Type-enhanced RouteLink component
+import { RouteLink as BaseRouteLink } from '@zphhpzzph/vue-route-gen/runtime';
+
+/**
+ * Type-safe RouteLink component
+ *
+ * For full type safety, use the component with specific route name and params:
+ *
+ * @example
+ * ```vue
+ * <RouteLink :name="ROUTE_NAME.USERS_ID" :params="{ id: '123' }">
+ *   View User
+ * </RouteLink>
+ *
+ * <RouteLink :name="ROUTE_NAME.INDEX">
+ *   Home
+ * </RouteLink>
+ * ```
+ *
+ * Type helpers:
+ * - `name`: RouteName (autocompletes route names)
+ * - `params`: RouteParamsByName<typeof ROUTE_NAME.YOUR_ROUTE>
+ */
+export const RouteLink = BaseRouteLink;
 
