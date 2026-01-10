@@ -15,7 +15,7 @@ export type RouteName = (typeof ROUTE_NAME)[keyof typeof ROUTE_NAME];
 export const ROUTE_PATH = {
   ABOUT: "/about",
   INDEX: "/",
-  TEST: "/custom-test-path",
+  TEST: "/test",
   USERS_ID: "/users/:id",
   USERS_INDEX: "/users",
 } as const;
@@ -43,7 +43,7 @@ export const routeNameList = [
 export const routePathList = [
   "/about",
   "/",
-  "/custom-test-path",
+  "/test",
   "/users/:id",
   "/users",
 ] as const;
@@ -51,7 +51,7 @@ export const routePathList = [
 export const routePathByName = {
   "about": "/about",
   "index": "/",
-  "test2": "/custom-test-path",
+  "test2": "/test",
   "users-[id]": "/users/:id",
   "users-index": "/users",
 } as const;
@@ -138,8 +138,9 @@ export const routes = [
     children: [],
   },
   {
-    path: "/custom-test-path",
+    path: "/test",
     name: "test2",
+    alias: ["/test-alias","/t"],
     component: () => import("../pages/test.vue"),
     meta:     {
       "title": "Test Override",
@@ -152,6 +153,7 @@ export const routes = [
   {
     path: "/users/:id",
     name: "users-[id]",
+    props: true,
     component: () => import("../pages/users/[id].vue"),
     meta:     {
       "title": "User Detail",
@@ -192,7 +194,7 @@ import { useRoute as vueUseRoute, useRouter as vueUseRouter } from 'vue-router';
  * ```
  */
 export function useRoute<TName extends RouteName = RouteName>(
-  name?: TName
+  _name?: TName
 ): Omit<RouteLocationNormalizedLoaded, 'params' | 'name' | 'meta'> & {
   name: TName;
   params: TName extends keyof RouteParams ? RouteParams[TName] : RouteParams[RouteName];
@@ -233,4 +235,3 @@ export function useRouter(): Omit<Router, 'push' | 'replace'> & {
   const router = vueUseRouter();
   return router as any;
 }
-

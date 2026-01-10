@@ -12,10 +12,8 @@ const route = useRoute('test2')
 </script>
 <route>
 {
-  "path": "/custom-test-path",
   "name": "test2",
   "alias": ["/test-alias", "/t"],
-  "props": true,
   "meta": {
     "title": "Test Override",
     "layout": "admin",
