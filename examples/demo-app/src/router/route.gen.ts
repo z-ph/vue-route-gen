@@ -74,34 +74,39 @@ export type RouteParamsByName<T extends RouteName> = RouteParams[T];
 // Missing fields are typed as undefined to ensure consistent shape
 export interface RouteMetaMap {
   'about': {
-    layout: undefined;
-    requiresAuth: undefined;
+    keepAlive: false;
+    layout: "default";
+    requiresAuth: false;
     roles: undefined;
-    title: undefined;
+    title: "About Us";
   };
   'index': {
-    layout: undefined;
-    requiresAuth: undefined;
+    keepAlive: true;
+    layout: "default";
+    requiresAuth: false;
     roles: undefined;
-    title: undefined;
+    title: "Home";
   };
   'test': {
+    keepAlive: undefined;
     layout: "admin";
     requiresAuth: true;
     roles: ["admin"];
     title: "Test Override";
   };
   'users-[id]': {
-    layout: undefined;
-    requiresAuth: undefined;
-    roles: undefined;
-    title: undefined;
+    keepAlive: undefined;
+    layout: "admin";
+    requiresAuth: true;
+    roles: ["admin" | "moderator"];
+    title: "User Detail";
   };
   'users-index': {
-    layout: undefined;
-    requiresAuth: undefined;
-    roles: undefined;
-    title: undefined;
+    keepAlive: undefined;
+    layout: "admin";
+    requiresAuth: true;
+    roles: ["admin"];
+    title: "Users List";
   };
 }
 
@@ -112,20 +117,30 @@ export const routes = [
     path: "/about",
     name: "about",
     component: () => import("../pages/about.vue"),
+    meta:     {
+      "title": "About Us",
+      "layout": "default",
+      "keepAlive": false,
+      "requiresAuth": false,
+    } as const,
     children: [],
   },
   {
     path: "/",
     name: "index",
     component: () => import("../pages/index.vue"),
+    meta:     {
+      "title": "Home",
+      "layout": "default",
+      "keepAlive": true,
+      "requiresAuth": false,
+    } as const,
     children: [],
   },
   {
     path: "/custom-test-path",
     name: "test",
     component: () => import("../pages/test-override.vue"),
-    alias: ["/test-alias", "/t"],
-    props: true,
     meta:     {
       "title": "Test Override",
       "layout": "admin",
@@ -138,12 +153,24 @@ export const routes = [
     path: "/users/:id",
     name: "users-[id]",
     component: () => import("../pages/users/[id].vue"),
+    meta:     {
+      "title": "User Detail",
+      "layout": "admin",
+      "requiresAuth": true,
+      "roles": ["admin", "moderator"],
+    } as const,
     children: [],
   },
   {
     path: "/users",
     name: "users-index",
     component: () => import("../pages/users/index.vue"),
+    meta:     {
+      "title": "Users List",
+      "layout": "admin",
+      "requiresAuth": true,
+      "roles": ["admin"],
+    } as const,
     children: [],
   }
 ] satisfies RouteRecordRaw[];

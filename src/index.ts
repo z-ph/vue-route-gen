@@ -269,13 +269,11 @@ function renderMetaAsConst(meta: Record<string, any>, indent: string): string {
   return lines.join('\n');
 }
 
-function renderRoute(route: RouteEntry, indent = '  '): string {
+function renderRoute(finalRoute: RouteEntry, indent = '  '): string {
   const nextIndent = `${indent}  `;
   const lines: string[] = [];
 
   // Apply configuration override
-  const finalRoute = applyConfigOverride(route);
-  const override = route.configOverride;
 
   lines.push(`${indent}{`);
   lines.push(`${nextIndent}path: ${JSON.stringify(finalRoute.path)},`);
@@ -284,34 +282,6 @@ function renderRoute(route: RouteEntry, indent = '  '): string {
     `${nextIndent}component: () => import(${JSON.stringify(finalRoute.importPath)}),`
   );
 
-  // Render additional RouteRecordRaw fields from override
-  if (override) {
-    if (override.alias !== undefined) {
-      if (Array.isArray(override.alias)) {
-        lines.push(`${nextIndent}alias: [${override.alias.map(a => JSON.stringify(a)).join(', ')}],`);
-      } else {
-        lines.push(`${nextIndent}alias: ${JSON.stringify(override.alias)},`);
-      }
-    }
-
-    if (override.redirect !== undefined) {
-      lines.push(`${nextIndent}redirect: ${JSON.stringify(override.redirect)},`);
-    }
-
-    if (override.props !== undefined) {
-      if (typeof override.props === 'boolean') {
-        lines.push(`${nextIndent}props: ${override.props},`);
-      } else if (typeof override.props === 'object') {
-        lines.push(`${nextIndent}props: ${JSON.stringify(override.props)},`);
-      } else {
-        lines.push(`${nextIndent}props: ${override.props},`);
-      }
-    }
-
-    if (override.beforeEnter !== undefined) {
-      lines.push(`${nextIndent}beforeEnter: ${override.beforeEnter},`);
-    }
-  }
 
   // Add meta if present (rendered as const for type inference)
   if (finalRoute.meta && Object.keys(finalRoute.meta).length > 0) {
@@ -440,14 +410,14 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
 
     routeEntries.push({ name: finalName, path: finalPath, params, defaultName });
 
-    return {
+    return applyConfigOverride({
       path: routePath,
       name: finalName, // Use overridden name
       importPath: page.importPath,
       children: [],
       params,
       configOverride,
-    };
+    })
   });
 
   const layoutRoutes = Array.from(layoutGroups.entries())
