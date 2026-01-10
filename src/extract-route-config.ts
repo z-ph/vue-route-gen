@@ -10,13 +10,11 @@ type RouteRecordProps = _RouteRecordProps;
  * Supports all RouteRecordRaw fields for complete customization
  */
 export interface RouteConfigOverride {
-  path?: string;
   name?: string;
   alias?: string | string[];
   redirect?: RouteRecordRedirectOption;
   props?: RouteRecordProps;
   meta?: Record<string, any>;
-  children?: RouteRecordRaw[];
   beforeEnter?: any;
   [key: string]: any; // Allow any other RouteRecordRaw fields
 }
