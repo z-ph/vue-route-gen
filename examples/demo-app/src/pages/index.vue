@@ -12,9 +12,11 @@
 <!-- 独立的 route 块，用于定义路由元数据 -->
 <route>
 {
+  meta:{
   "title": "Home",
   "layout": "default",
   "keepAlive": true,
   "requiresAuth": false
+}
 }
 </route>
