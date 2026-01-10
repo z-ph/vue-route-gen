@@ -15,9 +15,11 @@ const router = useRouter()
 </script>
 <route>
 {
+  meta:{
   "title": "User Detail",
   "layout": "admin",
   "requiresAuth": true,
   "roles": ["admin", "moderator"]
+}
 }
 </route>
