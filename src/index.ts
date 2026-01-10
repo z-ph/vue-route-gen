@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractRouteMeta, extractRouteConfig, type RouteConfigOverride } from './extract-meta.js';
+import {  extractRouteConfig, type RouteConfigOverride } from './extract-route-config.js';
 
 const EXCLUDED_DIRS = new Set(['components', 'hooks', 'services','types','constants','utils']);
 const CACHE_FILE = path.resolve(process.cwd(), 'node_modules/.cache/route-gen.json');
@@ -433,7 +433,6 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
     // Extract config and meta from page component
     const fullPath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
     const configOverride = extractRouteConfig(fullPath);
-    const meta = extractRouteMeta(fullPath);
 
     // Apply config override to get the final name and path
     const finalName = configOverride?.name ?? defaultName;
@@ -447,7 +446,6 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
       importPath: page.importPath,
       children: [],
       params,
-      meta,
       configOverride,
     };
   });
@@ -480,7 +478,6 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
         // Extract config and meta from page component
         const pageFilePath = path.resolve(pagesDir, page.importPath.replace(/^\.\//, ''));
         const configOverride = extractRouteConfig(pageFilePath);
-        const meta = extractRouteMeta(pageFilePath);
 
         // Apply config override to get the final name and path
         const finalName = configOverride?.name ?? defaultName;
@@ -494,7 +491,6 @@ function buildRoutes({ pagesDir, outFile }: { pagesDir: string; outFile: string 
           importPath: page.importPath,
           children: [],
           params,
-          meta,
           configOverride,
         };
       });

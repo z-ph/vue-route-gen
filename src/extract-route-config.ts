@@ -80,20 +80,6 @@ export function extractRouteConfig(filePath: string): RouteConfigOverride | unde
   }
 }
 
-/**
- * Parse Vue SFC and extract metadata from <route> custom block
- * @deprecated Use extractRouteConfig() instead for full configuration support
- */
-export function extractRouteMeta(filePath: string): Record<string, any> {
-  try {
-    const config = extractRouteConfig(filePath);
-    return config?.meta ?? {};
-  } catch (error) {
-    // If config extraction fails (e.g., conflict), return empty meta
-    console.warn(`Failed to extract meta from ${filePath}:`, error);
-    return {};
-  }
-}
 
 /**
  * Extract defineRoute() call content from script setup
@@ -155,13 +141,4 @@ function parseRouteConfig(content: string): RouteConfigOverride | undefined {
       return undefined;
     }
   }
-}
-
-/**
- * Parse the content of <route> custom block
- * The content should be valid JSON or JavaScript object literal
- * @deprecated Use parseRouteConfig() instead
- */
-function parseRouteBlockContent(content: string): Record<string, any> {
-  return parseRouteConfig(content) ?? {};
 }

@@ -1,7 +1,7 @@
 import type { Plugin, ViteDevServer } from 'vite';
 import path from 'node:path';
 import { generateRoutes, type GenerateRoutesOptions } from './index.js';
-import { extractRouteMeta, extractRouteConfig } from './extract-meta.js';
+import { extractRouteConfig } from './extract-route-config.js';
 import fs from 'node:fs';
 
 /**
@@ -94,8 +94,8 @@ export function routeGenPlugin(options?: Partial<GenerateRoutesOptions>): Plugin
   let server: ViteDevServer;
   const pagesDir = path.resolve(process.cwd(), options?.pagesDir || 'src/pages');
   const outFile = path.resolve(process.cwd(), options?.outFile || 'src/router/route.gen.ts');
-  // Cache file metadata for incremental updates
-  const fileCache = new Map<string, { meta: ReturnType<typeof extractRouteMeta>; config: ReturnType<typeof extractRouteConfig>; hash: string }>();
+  // Cache file configuration for incremental updates
+  const fileCache = new Map<string, { config: ReturnType<typeof extractRouteConfig>; hash: string }>();
 
   const shouldHandle = (file: string) => {
     const normalized = path.resolve(file);
@@ -134,20 +134,18 @@ export function routeGenPlugin(options?: Partial<GenerateRoutesOptions>): Plugin
     // If file hash changed, extract new config and compare
     if (cached.hash !== currentHash) {
       try {
-        const newMeta = extractRouteMeta(filePath);
         const newConfig = extractRouteConfig(filePath);
 
         // Compare with cached config
-        const metaChanged = JSON.stringify(cached.meta) !== JSON.stringify(newMeta);
         const configChanged = JSON.stringify(cached.config) !== JSON.stringify(newConfig);
 
         // Update cache
-        fileCache.set(filePath, { meta: newMeta, config: newConfig, hash: currentHash });
+        fileCache.set(filePath, { config: newConfig, hash: currentHash });
 
-        // Config/meta changes can be handled incrementally
+        // Config changes can be handled incrementally
         // But for simplicity and correctness, we'll regenerate for now
         // TODO: Implement true incremental updates
-        return metaChanged || configChanged;
+        return configChanged;
       } catch {
         return true; // Error reading file, regenerate
       }
