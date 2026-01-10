@@ -16,10 +16,10 @@ const router = useRouter()
 <route>
 {
   meta:{
-  "title": "User Detail",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin", "moderator"]
-}
+    "title": "User Detail",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin", "moderator"]
+  }
 }
 </route>

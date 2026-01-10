@@ -12,10 +12,10 @@
 <route>
 {
   meta:{
-  "title": "About Us",
-  "layout": "default",
-  "keepAlive": false,
-  "requiresAuth": false
-}
+    "title": "About Us",
+    "layout": "default",
+    "keepAlive": false,
+    "requiresAuth": false
+  }
 }
 </route>

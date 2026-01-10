@@ -13,10 +13,10 @@
 <route>
 {
   meta:{
-  "title": "Home",
-  "layout": "default",
-  "keepAlive": true,
-  "requiresAuth": false
-}
+    "title": "Home",
+    "layout": "default",
+    "keepAlive": true,
+    "requiresAuth": false
+  }
 }
 </route>

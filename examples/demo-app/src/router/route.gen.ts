@@ -5,7 +5,7 @@ import type { RouteRecordRaw, RouteLocationNormalizedLoaded, Router, LocationQue
 export const ROUTE_NAME = {
   ABOUT: "about",
   INDEX: "index",
-  TEST_OVERRIDE: "test",
+  TEST: "test2",
   USERS_ID: "users-[id]",
   USERS_INDEX: "users-index",
 } as const;
@@ -15,7 +15,7 @@ export type RouteName = (typeof ROUTE_NAME)[keyof typeof ROUTE_NAME];
 export const ROUTE_PATH = {
   ABOUT: "/about",
   INDEX: "/",
-  TEST_OVERRIDE: "/custom-test-path",
+  TEST: "/custom-test-path",
   USERS_ID: "/users/:id",
   USERS_INDEX: "/users",
 } as const;
@@ -25,7 +25,7 @@ export type RoutePath = (typeof ROUTE_PATH)[keyof typeof ROUTE_PATH];
 export const ROUTE_PATH_BY_NAME = {
   "about": ROUTE_PATH.ABOUT,
   "index": ROUTE_PATH.INDEX,
-  "test": ROUTE_PATH.TEST_OVERRIDE,
+  "test2": ROUTE_PATH.TEST,
   "users-[id]": ROUTE_PATH.USERS_ID,
   "users-index": ROUTE_PATH.USERS_INDEX,
 } as const;
@@ -35,7 +35,7 @@ export type RoutePathByName = typeof ROUTE_PATH_BY_NAME;
 export const routeNameList = [
   "about",
   "index",
-  "test",
+  "test2",
   "users-[id]",
   "users-index",
 ] as const;
@@ -51,7 +51,7 @@ export const routePathList = [
 export const routePathByName = {
   "about": "/about",
   "index": "/",
-  "test": "/custom-test-path",
+  "test2": "/custom-test-path",
   "users-[id]": "/users/:id",
   "users-index": "/users",
 } as const;
@@ -60,7 +60,7 @@ export const routePathByName = {
 export interface RouteParams {
   'about': Record<string, never>;
   'index': Record<string, never>;
-  'test': Record<string, never>;
+  'test2': Record<string, never>;
   'users-[id]': {
     id: string;
   };
@@ -87,7 +87,7 @@ export interface RouteMetaMap {
     roles: undefined;
     title: "Home";
   };
-  'test': {
+  'test2': {
     keepAlive: undefined;
     layout: "admin";
     requiresAuth: true;
@@ -139,8 +139,8 @@ export const routes = [
   },
   {
     path: "/custom-test-path",
-    name: "test",
-    component: () => import("../pages/test-override.vue"),
+    name: "test2",
+    component: () => import("../pages/test.vue"),
     meta:     {
       "title": "Test Override",
       "layout": "admin",

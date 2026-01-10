@@ -12,10 +12,10 @@
 <route>
 {
   meta:{
-  "title": "Users List",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin"]
-}
+    "title": "Users List",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin"]
+  }
 }
 </route>

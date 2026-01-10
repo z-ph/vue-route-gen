@@ -7,13 +7,13 @@
 <script setup lang="ts">
 import { useRoute } from '@/router';
 
-const route = useRoute('test')
+const route = useRoute('test2')
 
 </script>
 <route>
 {
   "path": "/custom-test-path",
-  "name": "test",
+  "name": "test2",
   "alias": ["/test-alias", "/t"],
   "props": true,
   "meta": {
