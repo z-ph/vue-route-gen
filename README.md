@@ -8,7 +8,7 @@ Vue 3 基于文件系统的路由生成器，为 Vue Router 提供完整的类�
 
 - 📁 **自动路由生成** - 基于 `pages/` 目录结构自动生成路由
 - 🔒 **类型安全** - 路由跳转和参数���取都有完整的 TypeScript 类型检查
-- 🎨 **`<route>` 自定义块** - 在组件中直接定义路由元数据（零运行时开销）
+- 🎨 **完整路由配置** - 支持所有 Vue Router 配置（`<route>` 块或 `defineRoute()` 宏）
 - 📦 **开箱即用** - 5 分钟即可完成配置
 
 ## 📦 快速开始
@@ -101,9 +101,9 @@ if (route.name === ROUTE_NAME.USERS_ID) {
 </script>
 ```
 
-### 定义路由元数据
+### 覆盖默认路由配置
 
-在组件中添加 `<route>` 自定义块：
+在组件中添加 `<route>` 自定义块，支持完整的路由配置,将覆盖文件路由的默认配置：
 
 ```vue
 <template>
@@ -112,13 +112,32 @@ if (route.name === ROUTE_NAME.USERS_ID) {
 
 <route>
 {
-  "title": "用户列表",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin"]
+  "meta": {
+    "title": "用户列表",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin"]
+  }
 }
 </route>
 ```
+
+或者使用 `defineRoute()` 宏：
+
+```vue
+<script setup lang="ts">
+defineRoute({
+  meta: {
+    title: '用户列表',
+    layout: 'admin',
+    requiresAuth: true,
+    roles: ['admin']
+  }
+});
+</script>
+```
+
+**注意**：可以自定义路径、别名等所有 Vue Router 配置项，详见 [路由配置指南](./docs/RouteConfig.md)。
 
 ### 在路由守卫中使用元数据
 
@@ -203,7 +222,20 @@ declare module '@zphhpzzph/vue-route-gen/runtime' {
 </route>
 ```
 
-### 支持的元数据属性
+### 支持的路由配置
+
+支持所有 Vue Router 配置项及自定义元数据：
+
+| 配置项 | 类型 | 说明 |
+|--------|------|------|
+| `path` | `string` | 自定义路由路径 |
+| `name` | `string` | 自定义路由名称 |
+| `alias` | `string \| string[]` | 路由别名 |
+| `redirect` | `string \| object` | 重定向配置 |
+| `props` | `boolean \| object` | 路由参数传递 |
+| `meta` | `object` | 路由元数据（见下表） |
+
+**常用 meta 属性**：
 
 | 属性 | 类型 | 说明 |
 |------|------|------|
@@ -212,10 +244,11 @@ declare module '@zphhpzzph/vue-route-gen/runtime' {
 | `keepAlive` | `boolean` | 是否缓存页面 |
 | `requiresAuth` | `boolean` | 是否需要认证 |
 | `roles` | `string[]` | 允许的角色 |
-| `redirect` | `string \| object` | 重定向配置 |
 | `icon` | `string` | 菜单图标 |
 | `hidden` | `boolean` | 是否隐藏菜单 |
 | `*` | `any` | 支持任何自定义属性 |
+
+完整配置示例请查看 [路由配置指南](./docs/RouteConfig.md)。
 
 ## 📖 实用示例
 
@@ -266,10 +299,14 @@ const userId = computed(() => route.params.id);
 
 <route>
 {
-  "title": "用户详情",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin", "moderator"]
+  "path": "/users/:id",
+  "props": true,
+  "meta": {
+    "title": "用户详情",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin", "moderator"]
+  }
 }
 </route>
 ```
@@ -306,7 +343,7 @@ A: 使用 `routeGenPlugin()` 后，路由会在文件变化时自动重新生成
 
 - **[文档索引](./docs/README.md)** - 完整文档导航
 - **[更新日志](./CHANGELOG.md)** - 版本更新记录
-- **[字面量类型推断](./docs/LiteralTypes.md)** - 精确的类型推断系统
+- **[路由配置指南](./docs/RouteConfig.md)** - `<route>` 块和 `defineRoute()` 完整用法
 - **[Vite 插件详解](./docs/VitePlugin.md)** - 插件工作原理
 
 ## 📄 License

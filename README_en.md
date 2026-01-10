@@ -8,7 +8,7 @@ Vue 3 file-based route generator for Vue Router with complete type inference sup
 
 - 📁 **Automatic Route Generation** - Auto-generate routes based on `pages/` directory structure
 - 🔒 **Type Safety** - Full TypeScript type checking for route navigation and parameter access
-- 🎨 **`<route>` Custom Blocks** - Define route metadata directly in components (zero runtime overhead)
+- 🎨 **Complete Route Configuration** - Support all Vue Router config (`<route>` block or `defineRoute()` macro)
 - 📦 **Ready to Use** - Get configured in 5 minutes
 
 ## 📦 Quick Start
@@ -101,9 +101,9 @@ if (route.name === ROUTE_NAME.USERS_ID) {
 </script>
 ```
 
-### Define Route Metadata
+### Define Route Configuration
 
-Add `<route>` custom block in your component:
+Add `<route>` custom block in your component, supports complete route configuration:
 
 ```vue
 <template>
@@ -112,13 +112,32 @@ Add `<route>` custom block in your component:
 
 <route>
 {
-  "title": "User List",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin"]
+  "meta": {
+    "title": "User List",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin"]
+  }
 }
 </route>
 ```
+
+Or use `defineRoute()` macro:
+
+```vue
+<script setup lang="ts">
+defineRoute({
+  meta: {
+    title: 'User List',
+    layout: 'admin',
+    requiresAuth: true,
+    roles: ['admin']
+  }
+});
+</script>
+```
+
+**Note**: You can customize path, alias, and all Vue Router config options. See [Route Configuration Guide](./docs/RouteConfig.md) for details.
 
 ### Use Metadata in Route Guards
 
@@ -203,7 +222,20 @@ Then use in `<route>` block:
 </route>
 ```
 
-### Supported Metadata Properties
+### Supported Route Configuration
+
+Supports all Vue Router config options and custom metadata:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `path` | `string` | Custom route path |
+| `name` | `string` | Custom route name |
+| `alias` | `string \| string[]` | Route aliases |
+| `redirect` | `string \| object` | Redirect configuration |
+| `props` | `boolean \| object` | Route parameter passing |
+| `meta` | `object` | Route metadata (see below) |
+
+**Common meta properties**:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -212,10 +244,11 @@ Then use in `<route>` block:
 | `keepAlive` | `boolean` | Whether to cache the page |
 | `requiresAuth` | `boolean` | Whether authentication is required |
 | `roles` | `string[]` | Allowed roles |
-| `redirect` | `string \| object` | Redirect configuration |
 | `icon` | `string` | Menu icon |
 | `hidden` | `boolean` | Whether to hide menu |
 | `*` | `any` | Supports any custom property |
+
+For complete configuration examples, see [Route Configuration Guide](./docs/RouteConfig.md).
 
 ## 📖 Practical Examples
 
@@ -266,10 +299,14 @@ const userId = computed(() => route.params.id);
 
 <route>
 {
-  "title": "User Detail",
-  "layout": "admin",
-  "requiresAuth": true,
-  "roles": ["admin", "moderator"]
+  "path": "/users/:id",
+  "props": true,
+  "meta": {
+    "title": "User Detail",
+    "layout": "admin",
+    "requiresAuth": true,
+    "roles": ["admin", "moderator"]
+  }
 }
 </route>
 ```
@@ -306,7 +343,7 @@ A: With `routeGenPlugin()`, routes are automatically regenerated when files chan
 
 - **[Documentation Index](./docs/README.md)** - Complete documentation navigation
 - **[Changelog](./CHANGELOG.md)** - Version updates and migration guide
-- **[Literal Type Inference](./docs/LiteralTypes.md)** - Precise type inference system
+- **[Route Configuration Guide](./docs/RouteConfig.md)** - Complete usage of `<route>` block and `defineRoute()`
 - **[Vite Plugin Details](./docs/VitePlugin.md)** - How the plugin works
 
 ## 📄 License

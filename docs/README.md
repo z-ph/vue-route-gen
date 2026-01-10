@@ -1,41 +1,86 @@
-# @zphhpzzph/vue-route-gen 文档
+# vue-route-gen 文档
 
-欢迎来到 @zphhpzzph/vue-route-gen 的文档中心！
+完整的使用指南，帮助你快速上手并掌握各种实用技巧。
 
-## 文档目录
+## 📚 文档目录
 
-### 核心功能
+### 基础用法
 
-- **[路由元数据字面量类型推断](./LiteralTypes.md)** - 精确的类型推断系统
-  - 字面量类型 vs 宽泛类型
-  - 工作原理和类型推断规则
-  - 实际应用示例
-  - 高级用法和最佳实践
-  - 迁移指南
+- **[路由配置指南](./RouteConfig.md)** - 使用 `<route>` 块和 `defineRoute()` 定义路由
+  - 两种配置方式对比
+  - 完整路由配置示例
+  - 常见配置模式
+  - 最佳实践
 
-- **[Vite 插件使用指南](./VitePlugin.md)** - 自动路由生成和智能更新
-  - 插件功能介绍
-  - 配置选项详解
-  - 智能更新机制
-  - 性能优化建议
-  - 开发体验优化
-  - 常见问题解答
+- **[Vite 插件配置](./VitePlugin.md)** - 自动化路由生成
+  - 基础配置
+  - 自定义选项
+  - 常见问题
 
-## 快速开始
+## 🚀 快速导航
 
-如果你是第一次使用，建议按照以下顺序阅读：
+### 你想...
 
-1. [主 README](../README.md) - 了解项目特性和基本用法
-2. [路由元数据字面量类型推断](./LiteralTypes.md) - 理解精确的类型推断系统
-3. [Vite 插件使用指南](./VitePlugin.md) - 学习如何配置和使用 Vite 插件
+**定义路由配置（路径、别名、权限等）**
+→ 查看 [路由配置指南](./RouteConfig.md)
 
-## 贡献文档
+**配置自动生成路由**
+→ 查看 [Vite 插件配置](./VitePlugin.md)
 
-如果你发现文档有任何问题或想要改进，欢迎提交 PR！
+**选择配置方式（`<route>` 块 vs `defineRoute()`）**
+→ 查看 [路由配置指南 - 选择哪种方式](./RouteConfig.md#选择哪种方式)
 
-## 相关资源
+**了解所有支持的配置项**
+→ 查看 [路由配置指南 - 完整配置示例](./RouteConfig.md#完整路由配置示例)
 
-- [Vue Router 官方文档](https://router.vuejs.org/)
-- [TypeScript 官方文档](https://www.typescriptlang.org/)
-- [Vue 3 官方文档](https://vuejs.org/)
-- [Vite 官方文档](https://vitejs.dev/)
+## 💡 常见使用场景
+
+### 1. 自定义路由路径
+
+```vue
+<route>
+{
+  "path": "/custom-users"
+}
+</route>
+```
+
+### 2. 添加路由别名
+
+```vue
+<route>
+{
+  "alias": ["/u", "/users-list"]
+}
+</route>
+```
+
+### 3. 配置权限控制
+
+```vue
+<route>
+{
+  "meta": {
+    "requiresAuth": true,
+    "roles": ["admin", "moderator"]
+  }
+}
+</route>
+```
+
+### 4. 使用 `defineRoute()` 宏
+
+```vue
+<script setup lang="ts">
+defineRoute({
+  title: '用户列表',
+  layout: 'admin'
+});
+</script>
+```
+
+## 🔗 相关资源
+
+- [主 README](../README.md) - 快速开始指南
+- [更新日志](../CHANGELOG.md) - 版本更新记录
+- [Vue Router 文档](https://router.vuejs.org/)
